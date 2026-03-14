@@ -1,0 +1,87 @@
+# ─── Python ───────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+*.egg
+
+# ─── Virtual environments ─────────────────────
+venv/
+.venv/
+ENV/
+env/
+
+# ─── Environment / Secrets ────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+*.env
+aws_credentials
+.aws/
+*.pem
+*.key
+
+# ─── Node / Next.js ───────────────────────────
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+out/
+frontend/out/
+.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── IDEs ─────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# ─── OS ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+logs/
+aquaai.log
+
+# ─── Project junk ─────────────────────────────
+temp_uploads/
+cache/
+.aquaai/
+
+# ─── Old test / throwaway files ───────────────
+test_bedrock.py
+test_call.py
+test_imports.py
+test_vision.py
+vision_agent.py
+species_agent.py
+chat_agent.py
+aquaai_pipeline.py
+s3_utils.py
+
+# ─── Docs we don't need in repo ───────────────
+API_TESTING.md
+DELIVERABLES_CHECKLIST.md
+DELIVERY_SUMMARY.md
+DEPLOYMENT.md
+NOVA_USAGE.md
+PROJECT_SUMMARY.md
+QUICKSTART.md
+SETUP.mdgit init
