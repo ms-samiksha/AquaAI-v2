@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
-import { Search, Loader, Sailboat, Wind } from 'lucide-react'
+import { Search, Loader } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -53,21 +53,17 @@ export default function SearchCard() {
       setError('Please enter a species name')
       return
     }
-
     setLoading(true)
     setError(null)
     setShowDropdown(false)
-
     try {
       const response = await axios.post(
         `${API_URL}/search`,
         { species_name: finalQuery.trim(), analysis_type: analysisType },
         { timeout: 30000 }
       )
-
       localStorage.setItem('aquaai_result', JSON.stringify(response.data))
       router.push('/results')
-
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message || 'Search failed')
     } finally {
@@ -85,7 +81,7 @@ export default function SearchCard() {
       {/* Type toggle */}
       <div className="flex gap-2">
         {[
-          { key: 'fish', icon: '🐠', label: 'Fish' },
+          { key: 'fish',  icon: '🐠', label: 'Fish'  },
           { key: 'coral', icon: '🪸', label: 'Coral' },
         ].map(t => (
           <button
@@ -93,16 +89,11 @@ export default function SearchCard() {
             onClick={() => setAnalysisType(t.key as 'fish' | 'coral')}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-mono transition-all duration-200"
             style={{
-              background: analysisType === t.key
-                ? 'rgba(6,182,212,0.15)'
-                : 'rgba(255,255,255,0.03)',
-              border: analysisType === t.key
-                ? '1px solid rgba(6,182,212,0.5)'
-                : '1px solid rgba(255,255,255,0.06)',
+              background: analysisType === t.key ? 'rgba(6,182,212,0.15)' : 'rgba(255,255,255,0.03)',
+              border: analysisType === t.key ? '1px solid rgba(6,182,212,0.5)' : '1px solid rgba(255,255,255,0.06)',
               color: analysisType === t.key ? '#67e8f9' : 'rgba(255,255,255,0.4)',
               boxShadow: analysisType === t.key ? '0 0 15px rgba(6,182,212,0.1)' : 'none',
-            }}
-          >
+            }}>
             <span>{t.icon}</span>
             <span className="tracking-wider uppercase text-xs">{t.label}</span>
           </button>
@@ -129,44 +120,26 @@ export default function SearchCard() {
               border: '1px solid rgba(6,182,212,0.2)',
               caretColor: '#67e8f9',
             }}
-            onMouseEnter={e => {
-              (e.target as HTMLInputElement).style.border = '1px solid rgba(6,182,212,0.4)'
-            }}
-            onMouseLeave={e => {
-              (e.target as HTMLInputElement).style.border = '1px solid rgba(6,182,212,0.2)'
-            }}
+            onMouseEnter={e => { (e.target as HTMLInputElement).style.border = '1px solid rgba(6,182,212,0.4)' }}
+            onMouseLeave={e => { (e.target as HTMLInputElement).style.border = '1px solid rgba(6,182,212,0.2)' }}
           />
         </div>
 
         {/* Autocomplete dropdown */}
         {showDropdown && (
-          <div
-            className="absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden z-50"
-            style={{
-              background: 'rgba(2,12,27,0.98)',
-              border: '1px solid rgba(6,182,212,0.2)',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-            }}
-          >
+          <div className="absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden z-50"
+            style={{ background: 'rgba(2,12,27,0.98)', border: '1px solid rgba(6,182,212,0.2)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
             {filtered.slice(0, 6).map((suggestion, i) => (
               <button
                 key={i}
-                onClick={() => {
-                  setQuery(suggestion)
-                  setShowDropdown(false)
-                  handleSearch(suggestion)
-                }}
+                onClick={() => { setQuery(suggestion); setShowDropdown(false); handleSearch(suggestion) }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-mono transition-all duration-150"
-                style={{ color: 'rgba(255,255,255,0.6)', borderBottom: i < filtered.slice(0,6).length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(6,182,212,0.08)'
-                  ;(e.currentTarget as HTMLButtonElement).style.color = '#67e8f9'
+                style={{
+                  color: 'rgba(255,255,255,0.6)',
+                  borderBottom: i < filtered.slice(0, 6).length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                 }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
-                  ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.6)'
-                }}
-              >
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(6,182,212,0.08)'; (e.currentTarget as HTMLButtonElement).style.color = '#67e8f9' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.6)' }}>
                 <Search className="w-3 h-3 text-cyan-500/40" />
                 {suggestion}
               </button>
@@ -183,26 +156,12 @@ export default function SearchCard() {
             ? ['Blue Tang', 'Clownfish', 'Lionfish', 'Manta Ray', 'Parrotfish']
             : ['Brain Coral', 'Staghorn Coral', 'Acropora', 'Elkhorn Coral', 'Sea Fan']
           ).map(s => (
-            <button
-              key={s}
+            <button key={s}
               onClick={() => { setQuery(s); handleSearch(s) }}
               className="px-3 py-1.5 rounded-lg text-xs font-mono transition-all duration-200"
-              style={{
-                background: 'rgba(6,182,212,0.06)',
-                border: '1px solid rgba(6,182,212,0.15)',
-                color: 'rgba(103,232,249,0.6)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(6,182,212,0.15)'
-                ;(e.currentTarget as HTMLButtonElement).style.color = '#67e8f9'
-                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(6,182,212,0.4)'
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(6,182,212,0.06)'
-                ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(103,232,249,0.6)'
-                ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(6,182,212,0.15)'
-              }}
-            >
+              style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)', color: 'rgba(103,232,249,0.6)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background='rgba(6,182,212,0.15)'; (e.currentTarget as HTMLButtonElement).style.color='#67e8f9'; (e.currentTarget as HTMLButtonElement).style.borderColor='rgba(6,182,212,0.4)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background='rgba(6,182,212,0.06)'; (e.currentTarget as HTMLButtonElement).style.color='rgba(103,232,249,0.6)'; (e.currentTarget as HTMLButtonElement).style.borderColor='rgba(6,182,212,0.15)' }}>
               {s}
             </button>
           ))}
@@ -223,29 +182,19 @@ export default function SearchCard() {
         disabled={!query.trim() || loading}
         className="w-full py-4 rounded-xl font-mono font-bold text-sm tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-3"
         style={{
-          background: query.trim() && !loading
-            ? 'linear-gradient(135deg, rgba(6,182,212,0.3), rgba(14,116,144,0.4))'
-            : 'rgba(255,255,255,0.03)',
-          border: query.trim() && !loading
-            ? '1px solid rgba(6,182,212,0.5)'
-            : '1px solid rgba(255,255,255,0.06)',
+          background: query.trim() && !loading ? 'linear-gradient(135deg, rgba(6,182,212,0.3), rgba(14,116,144,0.4))' : 'rgba(255,255,255,0.03)',
+          border: query.trim() && !loading ? '1px solid rgba(6,182,212,0.5)' : '1px solid rgba(255,255,255,0.06)',
           color: query.trim() && !loading ? '#67e8f9' : 'rgba(255,255,255,0.2)',
           boxShadow: query.trim() && !loading ? '0 0 30px rgba(6,182,212,0.15)' : 'none',
           cursor: !query.trim() || loading ? 'not-allowed' : 'pointer',
-        }}
-      >
+        }}>
         {loading ? (
-          <>
-            <Loader className="w-4 h-4 animate-spin" />
-            Searching Ocean Database...
-          </>
+          <><Loader className="w-4 h-4 animate-spin" />Searching Ocean Database...</>
         ) : (
-          <>
-            <Search className="w-4 h-4" />
-            Search Species
-          </>
+          <><Search className="w-4 h-4" />Search Species</>
         )}
       </button>
+
     </div>
   )
 }
