@@ -27,10 +27,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:8080",
+        "https://aquai-ai.vercel.app",          # ✅ correct Vercel URL
         "https://aquaai.vercel.app",
         "https://aquaai-frontend.vercel.app",
-        # Add your exact Vercel URL below once deployed:
-        # "https://YOUR-PROJECT-NAME.vercel.app",
+        "https://aquaiai.onrender.com",          # ✅ Render backend itself
     ],
     allow_credentials=True,
     allow_methods=["*"],
