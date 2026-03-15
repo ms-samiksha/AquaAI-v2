@@ -26,10 +26,7 @@ def _validate_image_bytes(image_bytes: bytes, max_size_mb: int = 10) -> None:
 
 
 def _safe_visual_features(features: dict, analysis_type: str) -> VisualFeatures:
-    """
-    Strip any fields Nova returns that aren't in VisualFeatures schema.
-    Prevents validation crash when Nova adds unexpected fields.
-    """
+    """Strip unknown fields + fix type mismatches from Nova output."""
     allowed = {
         "organism_type", "body_shape", "dominant_color", "pattern",
         "distinctive_traits", "possible_stress_signs",
@@ -40,6 +37,16 @@ def _safe_visual_features(features: dict, analysis_type: str) -> VisualFeatures:
     }
     clean = {k: v for k, v in features.items() if k in allowed}
     clean.setdefault("organism_type", analysis_type)
+
+    # ✅ THE FIX — Nova sometimes returns notable_features as a list
+    # Join it into a single string so schema doesn't crash
+    if isinstance(clean.get("notable_features"), list):
+        clean["notable_features"] = ", ".join(clean["notable_features"])
+
+    # Same safety for appendages just in case
+    if isinstance(clean.get("appendages"), list):
+        clean["appendages"] = ", ".join(clean["appendages"])
+
     return VisualFeatures(**clean)
 
 
@@ -67,7 +74,8 @@ async def analyze_image(
         raise HTTPException(status_code=400, detail=str(e))
 
     file_extension = file.filename.split(".")[-1].lower() or "jpg"
-    logger.info("Analyzing image: %s (%d bytes) [mode=%s]", file.filename, len(image_bytes), analysis_type)
+    logger.info("Analyzing image: %s (%d bytes) [mode=%s]",
+                file.filename, len(image_bytes), analysis_type)
 
     try:
         s3_key, presigned = upload_image(image_bytes, file_extension)
@@ -75,7 +83,6 @@ async def analyze_image(
         features = extract_visual_features(image_bytes, analysis_type)
         logger.info("Vision features: %s", features)
 
-        # ✅ safe — strips unknown fields Nova might return
         visual = _safe_visual_features(features, analysis_type)
 
         species_data = identify_species(features, analysis_type, image_bytes)
@@ -83,7 +90,8 @@ async def analyze_image(
 
         species = SpeciesResult(**species_data)
 
-        logger.info("Analysis complete: %s (mode=%s)", species.species_name, analysis_type)
+        logger.info("Analysis complete: %s (mode=%s)",
+                    species.species_name, analysis_type)
 
         return AnalyzeResponse(
             image_url=presigned,
