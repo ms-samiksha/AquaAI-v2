@@ -20,9 +20,27 @@ def _validate_image_bytes(image_bytes: bytes, max_size_mb: int = 10) -> None:
         raise ValueError(f"Image too large: {size_mb:.1f}MB (max {max_size_mb}MB)")
     try:
         img = Image.open(BytesIO(image_bytes))
-        img.verify()  # ✅ just verify, don't convert or modify
+        img.verify()
     except Exception as e:
         raise ValueError(f"Invalid image: {str(e)}")
+
+
+def _safe_visual_features(features: dict, analysis_type: str) -> VisualFeatures:
+    """
+    Strip any fields Nova returns that aren't in VisualFeatures schema.
+    Prevents validation crash when Nova adds unexpected fields.
+    """
+    allowed = {
+        "organism_type", "body_shape", "dominant_color", "pattern",
+        "distinctive_traits", "possible_stress_signs",
+        "coral_structure", "branching_pattern", "possible_bleaching",
+        "bleaching_severity", "bleaching_percentage", "visual_stress_signs",
+        "creature_class", "appendages", "size_estimate",
+        "notable_features", "health_observations",
+    }
+    clean = {k: v for k, v in features.items() if k in allowed}
+    clean.setdefault("organism_type", analysis_type)
+    return VisualFeatures(**clean)
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -35,7 +53,6 @@ async def analyze_image(
 
     analysis_type = analysis_type.lower().strip()
 
-    # ✅ NOW ACCEPTS fish, coral, marine
     if analysis_type not in ["fish", "coral", "marine"]:
         raise HTTPException(
             status_code=400,
@@ -50,16 +67,20 @@ async def analyze_image(
         raise HTTPException(status_code=400, detail=str(e))
 
     file_extension = file.filename.split(".")[-1].lower() or "jpg"
-
     logger.info("Analyzing image: %s (%d bytes) [mode=%s]", file.filename, len(image_bytes), analysis_type)
 
     try:
         s3_key, presigned = upload_image(image_bytes, file_extension)
 
         features = extract_visual_features(image_bytes, analysis_type)
-        visual = VisualFeatures(**features)
+        logger.info("Vision features: %s", features)
+
+        # ✅ safe — strips unknown fields Nova might return
+        visual = _safe_visual_features(features, analysis_type)
 
         species_data = identify_species(features, analysis_type, image_bytes)
+        logger.info("Species data: %s", str(species_data)[:300])
+
         species = SpeciesResult(**species_data)
 
         logger.info("Analysis complete: %s (mode=%s)", species.species_name, analysis_type)
@@ -73,5 +94,5 @@ async def analyze_image(
         )
 
     except Exception as e:
-        logger.error("Error during analysis: %s", str(e))
+        logger.error("Error during analysis: %s", str(e), exc_info=True)
         raise HTTPException(status_code=500, detail="Image analysis failed")
