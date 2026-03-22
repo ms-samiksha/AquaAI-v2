@@ -22,7 +22,6 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:8080",
-        "https://aquai-ai.vercel.app",
         "https://aquaai-v2.vercel.app",
         "https://aquaai.vercel.app",
         "https://aquaiai.onrender.com",

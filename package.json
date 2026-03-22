@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "@types/three": "^0.183.1",
-    "globe.gl": "^2.45.1",
-    "three": "^0.183.2"
-  }
-}
