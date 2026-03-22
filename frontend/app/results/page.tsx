@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ChatPanel from '@/components/ChatPanel'
-import { ArrowLeft, X, AlertTriangle, CheckCircle, Leaf, Heart } from 'lucide-react'
+import { ArrowLeft, X, AlertTriangle, CheckCircle, Leaf, Heart, Globe } from 'lucide-react'
 
 interface VisualFeatures {
   organism_type?: string
@@ -39,6 +39,18 @@ interface Species {
   health_status?: string
   observed_conditions?: string[]
   health_notes?: string
+  bleaching_stage?: number
+  bleaching_percentage?: number
+  recovery_probability?: number
+  weeks_to_irreversible?: number
+  temperature_stress?: string
+  monitoring_org?: string
+  monitoring_contact?: string
+  monitoring_url?: string
+  immediate_actions?: string[]
+  ocean_health_score?: number
+  iucn_status?: string
+  population_trend?: string
 }
 
 interface AnalysisResult {
@@ -99,12 +111,12 @@ function healthEmoji(status?: string) {
 
 export default function ResultsPage() {
   const router = useRouter()
-  const [result, setResult] = useState<AnalysisResult | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [chatOpen, setChatOpen] = useState(false)
-  const [imgUrl, setImgUrl] = useState('')
+  const [result, setResult]       = useState<AnalysisResult | null>(null)
+  const [loading, setLoading]     = useState(true)
+  const [chatOpen, setChatOpen]   = useState(false)
+  const [imgUrl, setImgUrl]       = useState('')
   const [activeTab, setActiveTab] = useState<'overview' | 'facts' | 'conservation'>('overview')
-  const [modal, setModal] = useState<ModalInfo | null>(null)
+  const [modal, setModal]         = useState<ModalInfo | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem('aquaai_result')
@@ -142,8 +154,8 @@ export default function ResultsPage() {
     </div>
   )
 
-  const isCoral   = result.analysis_type === 'coral'
-  const isMarine  = result.analysis_type === 'marine'
+  const isCoral       = result.analysis_type === 'coral'
+  const isMarine      = result.analysis_type === 'marine'
   const isImageUpload = !!result.s3_key
   const pct = Math.min(Math.max(result.species.confidence * 100, 0), 100)
   const dl  = result.species.danger_level || 'low'
@@ -151,9 +163,6 @@ export default function ResultsPage() {
   const dColor: Record<string, string> = { critical: '#ef4444', high: '#f97316', moderate: '#eab308', low: '#22c55e', healthy: '#22c55e' }
   const dIcon:  Record<string, string> = { critical: '🔴', high: '🟠', moderate: '🟡', low: '🟢', healthy: '🟢' }
   const dc = dColor[dl] || '#22c55e'
-
-  const coralHealthColor  = (s?: string) => { if (!s) return 'rgba(34,197,94,0.12)'; if (s.includes('severe')) return 'rgba(220,38,38,0.15)'; if (s.includes('bleach')) return 'rgba(239,68,68,0.12)'; if (s.includes('stress')) return 'rgba(245,158,11,0.12)'; return 'rgba(34,197,94,0.12)' }
-  const coralHealthBorder = (s?: string) => { if (!s) return 'rgba(34,197,94,0.3)'; if (s.includes('severe')) return 'rgba(220,38,38,0.4)'; if (s.includes('bleach')) return 'rgba(239,68,68,0.3)'; if (s.includes('stress')) return 'rgba(245,158,11,0.3)'; return 'rgba(34,197,94,0.3)' }
 
   const fishCards = [
     { icon: '🌍', label: 'Habitat',        value: result.species.natural_habitat || '' },
@@ -172,7 +181,11 @@ export default function ResultsPage() {
     { icon: '🌡️', label: 'Sensitivity', value: sl || result.species.rarity_level || '' },
   ]
 
-  const hasHealthData = !!(result.species.health_status || (result.species.observed_conditions?.length ?? 0) > 0 || result.species.health_notes)
+  const hasHealthData = !!(
+    result.species.health_status ||
+    (result.species.observed_conditions?.length ?? 0) > 0 ||
+    result.species.health_notes
+  )
 
   return (
     <>
@@ -213,8 +226,14 @@ export default function ResultsPage() {
                   {modal.icon}
                 </div>
                 <div>
-                  <p className="text-xs tracking-widest uppercase mb-0.5" style={{ color: 'rgba(6,182,212,0.5)', fontFamily: "'JetBrains Mono',monospace" }}>{modal.label}</p>
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)', fontFamily: "'JetBrains Mono',monospace" }}>{result.species.species_name}</p>
+                  <p className="text-xs tracking-widest uppercase mb-0.5"
+                    style={{ color: 'rgba(6,182,212,0.5)', fontFamily: "'JetBrains Mono',monospace" }}>
+                    {modal.label}
+                  </p>
+                  <p className="text-xs"
+                    style={{ color: 'rgba(255,255,255,0.2)', fontFamily: "'JetBrains Mono',monospace" }}>
+                    {result.species.species_name}
+                  </p>
                 </div>
               </div>
               <button onClick={() => setModal(null)} className="p-2 rounded-lg transition-all"
@@ -224,7 +243,8 @@ export default function ResultsPage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)', fontFamily: "'JetBrains Mono',monospace", lineHeight: '1.8' }}>
+            <p className="text-base leading-relaxed"
+              style={{ color: 'rgba(255,255,255,0.8)', fontFamily: "'JetBrains Mono',monospace", lineHeight: '1.8' }}>
               {modal.value || 'No data available.'}
             </p>
             <button onClick={() => setModal(null)}
@@ -238,18 +258,22 @@ export default function ResultsPage() {
         </div>
       )}
 
-      <main className="min-h-screen relative overflow-x-hidden" style={{ background: '#020c1b', fontFamily: "'JetBrains Mono',monospace" }}>
+      <main className="min-h-screen relative overflow-x-hidden"
+        style={{ background: '#020c1b', fontFamily: "'JetBrains Mono',monospace" }}>
 
         {imgUrl && (
           <div className="fixed inset-0 z-0 pointer-events-none">
             <div className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url('${imgUrl}')`, filter: 'blur(80px) saturate(0.22)', transform: 'scale(1.2)', opacity: 0.45 }} />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg,rgba(2,12,27,0.95) 0%,rgba(2,12,27,0.75) 50%,rgba(2,12,27,0.97) 100%)' }} />
+            <div className="absolute inset-0"
+              style={{ background: 'linear-gradient(160deg,rgba(2,12,27,0.95) 0%,rgba(2,12,27,0.75) 50%,rgba(2,12,27,0.97) 100%)' }} />
           </div>
         )}
-        <div className="fixed inset-0 z-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(6,182,212,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,0.025) 1px,transparent 1px)', backgroundSize: '50px 50px' }} />
+        <div className="fixed inset-0 z-0 pointer-events-none"
+          style={{ backgroundImage: 'linear-gradient(rgba(6,182,212,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,0.025) 1px,transparent 1px)', backgroundSize: '50px 50px' }} />
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-          <div className="absolute left-0 right-0 h-px opacity-20" style={{ background: 'linear-gradient(90deg,transparent,rgba(6,182,212,0.6),transparent)', animation: 'scanline 12s linear infinite' }} />
+          <div className="absolute left-0 right-0 h-px opacity-20"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(6,182,212,0.6),transparent)', animation: 'scanline 12s linear infinite' }} />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6">
@@ -286,8 +310,11 @@ export default function ResultsPage() {
 
           {/* HERO */}
           <div className="fu d2 mb-6">
-            <p className="text-xs tracking-widest mb-1" style={{ color: 'rgba(6,182,212,0.4)' }}>// ANALYSIS_COMPLETE · {new Date().toLocaleDateString()}</p>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-2 shimmer-text" style={{ fontFamily: "'Orbitron',monospace" }}>
+            <p className="text-xs tracking-widest mb-1" style={{ color: 'rgba(6,182,212,0.4)' }}>
+              // ANALYSIS_COMPLETE · {new Date().toLocaleDateString()}
+            </p>
+            <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-2 shimmer-text"
+              style={{ fontFamily: "'Orbitron',monospace" }}>
               {result.species.species_name}
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -298,9 +325,29 @@ export default function ResultsPage() {
                 </span>
               ))}
               <span className="text-xs px-2.5 py-1 rounded-full font-bold"
-                style={{ color: pct >= 80 ? '#67e8f9' : pct >= 60 ? '#fbbf24' : '#f87171', border: `1px solid ${pct >= 80 ? 'rgba(6,182,212,0.3)' : 'rgba(251,191,36,0.3)'}`, background: `${pct >= 80 ? 'rgba(6,182,212,0.06)' : 'rgba(251,191,36,0.06)'}` }}>
+                style={{
+                  color: pct >= 80 ? '#67e8f9' : pct >= 60 ? '#fbbf24' : '#f87171',
+                  border: `1px solid ${pct >= 80 ? 'rgba(6,182,212,0.3)' : 'rgba(251,191,36,0.3)'}`,
+                  background: pct >= 80 ? 'rgba(6,182,212,0.06)' : 'rgba(251,191,36,0.06)',
+                }}>
                 {pct.toFixed(1)}% match
               </span>
+              {result.species.iucn_status && (
+                <span className="text-xs px-2.5 py-1 rounded-full font-bold"
+                  style={{
+                    color: result.species.iucn_status.includes('Critically') ? '#ef4444'
+                      : result.species.iucn_status.includes('Endangered') ? '#f97316'
+                      : result.species.iucn_status.includes('Vulnerable') ? '#eab308'
+                      : '#4ade80',
+                    border: `1px solid ${result.species.iucn_status.includes('Critically') ? 'rgba(239,68,68,0.3)'
+                      : result.species.iucn_status.includes('Endangered') ? 'rgba(249,115,22,0.3)'
+                      : result.species.iucn_status.includes('Vulnerable') ? 'rgba(234,179,8,0.3)'
+                      : 'rgba(34,197,94,0.3)'}`,
+                    background: 'rgba(0,0,0,0.2)',
+                  }}>
+                  IUCN: {result.species.iucn_status}
+                </span>
+              )}
             </div>
           </div>
 
@@ -309,12 +356,15 @@ export default function ResultsPage() {
 
             {/* LEFT PANEL */}
             <div className="fu d3 lg:col-span-3 flex flex-col gap-3">
-
-              {/* Image */}
               <div className="img-glow rounded-2xl overflow-hidden relative"
                 style={{ border: '1px solid rgba(6,182,212,0.25)', background: 'rgba(2,12,27,0.9)' }}>
                 {['tl','tr','bl','br'].map(c => (
-                  <div key={c} className={`absolute w-4 h-4 z-10 ${c==='tl'?'top-0 left-0 border-t-2 border-l-2 rounded-tl-lg':c==='tr'?'top-0 right-0 border-t-2 border-r-2 rounded-tr-lg':c==='bl'?'bottom-0 left-0 border-b-2 border-l-2 rounded-bl-lg':'bottom-0 right-0 border-b-2 border-r-2 rounded-br-lg'} border-cyan-400`} />
+                  <div key={c} className={`absolute w-4 h-4 z-10 ${
+                    c==='tl' ? 'top-0 left-0 border-t-2 border-l-2 rounded-tl-lg'
+                    : c==='tr' ? 'top-0 right-0 border-t-2 border-r-2 rounded-tr-lg'
+                    : c==='bl' ? 'bottom-0 left-0 border-b-2 border-l-2 rounded-bl-lg'
+                    : 'bottom-0 right-0 border-b-2 border-r-2 rounded-br-lg'
+                  } border-cyan-400`} />
                 ))}
                 <div style={{ height: '240px' }}>
                   {imgUrl
@@ -334,12 +384,17 @@ export default function ResultsPage() {
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
                     <div className="h-full rounded-full transition-all duration-1000"
-                      style={{ width:`${pct}%`, background: pct>80?'linear-gradient(90deg,#0891b2,#67e8f9)':pct>60?'linear-gradient(90deg,#d97706,#fbbf24)':'linear-gradient(90deg,#dc2626,#f87171)', boxShadow:'0 0 8px rgba(6,182,212,0.5)' }} />
+                      style={{
+                        width: `${pct}%`,
+                        background: pct>80 ? 'linear-gradient(90deg,#0891b2,#67e8f9)'
+                          : pct>60 ? 'linear-gradient(90deg,#d97706,#fbbf24)'
+                          : 'linear-gradient(90deg,#dc2626,#f87171)',
+                        boxShadow: '0 0 8px rgba(6,182,212,0.5)',
+                      }} />
                   </div>
                 </div>
               </div>
 
-              {/* Visual scan */}
               {(result.visual_features?.body_shape || result.visual_features?.coral_structure || result.visual_features?.creature_class) && (
                 <div className="rounded-xl p-4" style={{ background: 'rgba(2,12,27,0.8)', border: '1px solid rgba(6,182,212,0.1)' }}>
                   <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'rgba(6,182,212,0.4)' }}>// Visual Scan</p>
@@ -368,7 +423,6 @@ export default function ResultsPage() {
                 </div>
               )}
 
-              {/* Known as */}
               {(result.species.common_names?.length ?? 0) > 0 && (
                 <div className="rounded-xl p-4" style={{ background: 'rgba(2,12,27,0.8)', border: '1px solid rgba(6,182,212,0.1)' }}>
                   <p className="text-xs tracking-widest uppercase mb-2.5" style={{ color: 'rgba(6,182,212,0.4)' }}>// Known As</p>
@@ -384,20 +438,23 @@ export default function ResultsPage() {
               )}
             </div>
 
-            {/* CENTER: TABS */}
+            {/* CENTER TABS */}
             <div className="fu d3 lg:col-span-6 flex flex-col gap-4">
-
               <div className="flex gap-0" style={{ borderBottom: '1px solid rgba(6,182,212,0.1)' }}>
                 {(['overview', 'facts', 'conservation'] as const).map(tab => (
                   <button key={tab} onClick={() => setActiveTab(tab)}
                     className="px-4 py-2.5 text-xs tracking-widest uppercase transition-all duration-200"
-                    style={{ color: activeTab===tab ? '#67e8f9' : 'rgba(255,255,255,0.25)', borderBottom: activeTab===tab ? '2px solid #67e8f9' : '2px solid transparent', background: 'transparent' }}>
+                    style={{
+                      color: activeTab===tab ? '#67e8f9' : 'rgba(255,255,255,0.25)',
+                      borderBottom: activeTab===tab ? '2px solid #67e8f9' : '2px solid transparent',
+                      background: 'transparent',
+                    }}>
                     {tab === 'overview' ? '📋 Overview' : tab === 'facts' ? '💡 Facts' : '🌿 Conservation'}
                   </button>
                 ))}
               </div>
 
-              {/* OVERVIEW */}
+              {/* ── OVERVIEW ── */}
               {activeTab === 'overview' && (
                 <div className="space-y-4">
 
@@ -410,14 +467,15 @@ export default function ResultsPage() {
                     <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>{result.species.description}</p>
                   </div>
 
-                  {/* ── HEALTH PANEL — all types ── */}
-                  {hasHealthData && (
+                  {/* Health panel — fish/marine only */}
+                  {hasHealthData && !isCoral && (
                     <div className="rounded-2xl p-5"
                       style={{ background: healthColor(result.species.health_status), border: `1px solid ${healthBorderColor(result.species.health_status)}` }}>
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Heart className="w-4 h-4" style={{ color: healthTextColor(result.species.health_status) }} />
-                          <span className="text-xs tracking-widest uppercase" style={{ color: healthTextColor(result.species.health_status), opacity: 0.8 }}>
+                          <span className="text-xs tracking-widest uppercase"
+                            style={{ color: healthTextColor(result.species.health_status), opacity: 0.8 }}>
                             Health Assessment
                           </span>
                         </div>
@@ -427,8 +485,6 @@ export default function ResultsPage() {
                           {result.species.health_status || 'unknown'}
                         </span>
                       </div>
-
-                      {/* Condition chips */}
                       {(result.species.observed_conditions?.length ?? 0) > 0 && (
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {result.species.observed_conditions!.map((c, i) => (
@@ -439,8 +495,6 @@ export default function ResultsPage() {
                           ))}
                         </div>
                       )}
-
-                      {/* Health notes */}
                       {result.species.health_notes && (
                         <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
                           {result.species.health_notes}
@@ -449,7 +503,7 @@ export default function ResultsPage() {
                     </div>
                   )}
 
-                  {/* Fish stat cards */}
+                  {/* Fish cards */}
                   {!isCoral && !isMarine && (
                     <div className="grid grid-cols-2 gap-3">
                       {fishCards.map(({ icon, label, value }) => (
@@ -467,7 +521,7 @@ export default function ResultsPage() {
                     </div>
                   )}
 
-                  {/* Marine stat cards */}
+                  {/* Marine cards */}
                   {isMarine && (
                     <div className="grid grid-cols-2 gap-3">
                       {marineCards.map(({ icon, label, value }) => (
@@ -485,22 +539,201 @@ export default function ResultsPage() {
                     </div>
                   )}
 
-                  {/* Coral overview */}
+                  {/* ── CORAL DASHBOARD ── */}
                   {isCoral && (
                     <div className="space-y-3">
-                      <div className="rounded-xl p-4" style={{ background: coralHealthColor(result.species.coral_health_status), border: `1px solid ${coralHealthBorder(result.species.coral_health_status)}` }}>
-                        <p className="text-xs tracking-wider uppercase mb-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Health Status</p>
-                        <p className="text-sm font-bold text-white capitalize">{result.species.coral_health_status || 'Healthy'}</p>
+
+                      {/* Row 1 — Health Score + Danger Level */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {result.species.ocean_health_score !== undefined && (
+                          <div className="rounded-2xl p-4"
+                            style={{
+                              background: result.species.ocean_health_score > 60 ? 'rgba(34,197,94,0.06)'
+                                : result.species.ocean_health_score > 30 ? 'rgba(245,158,11,0.06)'
+                                : 'rgba(239,68,68,0.06)',
+                              border: `1px solid ${result.species.ocean_health_score > 60 ? 'rgba(34,197,94,0.2)'
+                                : result.species.ocean_health_score > 30 ? 'rgba(245,158,11,0.2)'
+                                : 'rgba(239,68,68,0.2)'}`,
+                            }}>
+                            <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                              Health Score
+                            </p>
+                            <p className="text-4xl font-black mb-2"
+                              style={{
+                                fontFamily: "'Orbitron',monospace",
+                                color: result.species.ocean_health_score > 60 ? '#4ade80'
+                                  : result.species.ocean_health_score > 30 ? '#fbbf24' : '#f87171',
+                              }}>
+                              {result.species.ocean_health_score}
+                              <span className="text-sm font-normal" style={{ color: 'rgba(255,255,255,0.2)' }}>/100</span>
+                            </p>
+                            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                              <div className="h-full rounded-full"
+                                style={{
+                                  width: `${result.species.ocean_health_score}%`,
+                                  background: result.species.ocean_health_score > 60
+                                    ? 'linear-gradient(90deg,#16a34a,#4ade80)'
+                                    : result.species.ocean_health_score > 30
+                                    ? 'linear-gradient(90deg,#d97706,#fbbf24)'
+                                    : 'linear-gradient(90deg,#dc2626,#f87171)',
+                                }} />
+                            </div>
+                            <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>
+                              {result.species.ocean_health_score > 60 ? 'Good health'
+                                : result.species.ocean_health_score > 30 ? 'Needs attention'
+                                : 'Critical condition'}
+                            </p>
+                          </div>
+                        )}
+                        <div className="rounded-2xl p-4"
+                          style={{ background: `${dc}08`, border: `1px solid ${dc}35` }}>
+                          <p className="text-xs tracking-widest uppercase mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                            Danger Level
+                          </p>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-2xl">{dIcon[dl] || '🟢'}</span>
+                            <p className="font-black capitalize" style={{ color: dc, fontFamily: "'Orbitron',monospace", fontSize: '16px' }}>{dl}</p>
+                          </div>
+                          {result.species.bleaching_stage !== undefined && (
+                            <>
+                              <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', marginBottom: '4px' }}>BLEACHING STAGE</p>
+                              <p className="text-xs font-bold" style={{
+                                color: ['#22c55e','#eab308','#f97316','#ef4444','#6b2737'][result.species.bleaching_stage] || '#22c55e'
+                              }}>
+                                Stage {result.species.bleaching_stage} — {['Healthy','Pale','Partial','Severe','Mortality'][result.species.bleaching_stage]}
+                              </p>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      {isImageUpload && (
-                        <div className="rounded-xl p-4" style={{ background: `${dc}12`, border: `1px solid ${dc}40` }}>
-                          <p className="text-xs tracking-wider uppercase mb-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Danger Level</p>
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">{dIcon[dl] || '🟢'}</span>
-                            <p className="text-sm font-bold capitalize" style={{ color: dc }}>{dl}</p>
+
+                      {/* Row 2 — Bleaching progression bar */}
+                      {result.species.bleaching_stage !== undefined && (
+                        <div className="rounded-2xl p-4"
+                          style={{ background: 'rgba(2,12,27,0.85)', border: '1px solid rgba(6,182,212,0.1)' }}>
+                          <p className="text-xs tracking-widest uppercase mb-3" style={{ color: 'rgba(6,182,212,0.35)' }}>
+                            Bleaching Progression
+                          </p>
+                          <div className="flex gap-1.5">
+                            {[0,1,2,3,4].map(s => {
+                              const stageColors = ['#22c55e','#eab308','#f97316','#ef4444','#6b2737']
+                              const stageLabels = ['Healthy','Pale','Partial','Severe','Mortality']
+                              const active = s <= (result.species.bleaching_stage ?? 0)
+                              return (
+                                <div key={s} className="flex-1">
+                                  <div className="h-3 rounded-full mb-1"
+                                    style={{
+                                      background: active ? stageColors[s] : 'rgba(255,255,255,0.05)',
+                                      boxShadow: active && s === result.species.bleaching_stage ? `0 0 8px ${stageColors[s]}80` : 'none',
+                                    }} />
+                                  <p className="text-center" style={{ color: active ? stageColors[s] : 'rgba(255,255,255,0.12)', fontSize: '8px' }}>
+                                    {stageLabels[s]}
+                                  </p>
+                                </div>
+                              )
+                            })}
                           </div>
                         </div>
                       )}
+
+                      {/* Row 3 — 4 stat boxes */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { label: 'Bleaching %', value: `${result.species.bleaching_percentage ?? 0}%`,  color: '#f97316', icon: '🌡' },
+                          { label: 'Recovery',    value: `${result.species.recovery_probability ?? 0}%`,  color: (result.species.recovery_probability ?? 0) > 50 ? '#4ade80' : '#f87171', icon: '💚' },
+                          { label: 'Time Left',   value: result.species.weeks_to_irreversible ? `${result.species.weeks_to_irreversible}w` : result.species.bleaching_stage === 0 ? 'Safe' : 'Critical', color: '#fbbf24', icon: '⏱' },
+                          { label: 'Temp Stress', value: result.species.temperature_stress ?? 'low', color: result.species.temperature_stress === 'critical' ? '#ef4444' : result.species.temperature_stress === 'high' ? '#f97316' : result.species.temperature_stress === 'moderate' ? '#eab308' : '#4ade80', icon: '🔥' },
+                        ].map(({ label, value, color, icon }) => (
+                          <div key={label} className="rounded-xl p-3 flex items-center gap-3"
+                            style={{ background: `${color}08`, border: `1px solid ${color}20` }}>
+                            <span className="text-lg">{icon}</span>
+                            <div>
+                              <p className="text-xs capitalize font-bold" style={{ color }}>{value}</p>
+                              <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>{label}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Row 4 — IUCN + Population */}
+                      {result.species.iucn_status && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-xl p-3"
+                            style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.12)' }}>
+                            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', marginBottom: '4px' }}>IUCN STATUS</p>
+                            <p className="text-xs font-bold"
+                              style={{
+                                color: result.species.iucn_status.includes('Critically') ? '#ef4444'
+                                  : result.species.iucn_status.includes('Endangered') ? '#f97316'
+                                  : result.species.iucn_status.includes('Vulnerable') ? '#eab308'
+                                  : '#4ade80',
+                              }}>
+                              {result.species.iucn_status}
+                            </p>
+                          </div>
+                          <div className="rounded-xl p-3"
+                            style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.12)' }}>
+                            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', marginBottom: '4px' }}>POPULATION</p>
+                            <p className="text-xs font-bold capitalize"
+                              style={{
+                                color: result.species.population_trend === 'increasing' ? '#4ade80'
+                                  : result.species.population_trend === 'decreasing' ? '#f87171' : '#fbbf24',
+                              }}>
+                              {result.species.population_trend === 'increasing' ? '↑ Increasing'
+                                : result.species.population_trend === 'decreasing' ? '↓ Decreasing'
+                                : '→ Stable'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Row 5 — Actions + Report To */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {(result.species.immediate_actions?.length ?? 0) > 0 && (
+                          <div className="rounded-2xl p-4"
+                            style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.12)' }}>
+                            <p className="text-xs tracking-widest uppercase mb-2.5" style={{ color: 'rgba(239,68,68,0.5)', fontSize: '9px' }}>
+                              Actions Required
+                            </p>
+                            <ul className="space-y-1.5">
+                              {result.species.immediate_actions!.slice(0, 4).map((action, i) => (
+                                <li key={i} className="flex gap-1.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                                  <span style={{ color: 'rgba(239,68,68,0.5)', flexShrink: 0 }}>▸</span>
+                                  <span style={{ fontSize: '10px', lineHeight: '1.4' }}>{action}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {result.species.monitoring_org && (
+                          <div className="rounded-2xl p-4"
+                            style={{ background: 'rgba(6,182,212,0.04)', border: '1px solid rgba(6,182,212,0.12)' }}>
+                            <p className="text-xs tracking-widest uppercase mb-2.5" style={{ color: 'rgba(6,182,212,0.4)', fontSize: '9px' }}>
+                              Report To
+                            </p>
+                            <p className="font-bold text-white mb-2" style={{ fontSize: '10px', lineHeight: '1.4' }}>
+                              {result.species.monitoring_org}
+                            </p>
+                            {result.species.monitoring_contact && (
+                              <p className="mb-1.5" style={{ color: 'rgba(103,232,249,0.5)', fontSize: '10px' }}>
+                                📧 {result.species.monitoring_contact}
+                              </p>
+                            )}
+                            {result.species.monitoring_url && (
+                              <a href={result.species.monitoring_url}
+                                target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 transition-all"
+                                style={{ color: 'rgba(103,232,249,0.4)', fontSize: '10px' }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#67e8f9' }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(103,232,249,0.4)' }}>
+                                🔗 Visit org →
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 6 — Habitat + Sensitivity */}
                       {!isImageUpload && sl && (
                         <div className="hover-card rounded-xl p-4"
                           style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.15)' }}
@@ -529,7 +762,7 @@ export default function ResultsPage() {
                 </div>
               )}
 
-              {/* FACTS TAB */}
+              {/* ── FACTS TAB ── */}
               {activeTab === 'facts' && (
                 <div className="rounded-2xl p-5" style={{ background: 'rgba(2,12,27,0.85)', border: '1px solid rgba(6,182,212,0.13)' }}>
                   {(result.species.interesting_facts ?? []).length > 0 ? (
@@ -555,7 +788,7 @@ export default function ResultsPage() {
                 </div>
               )}
 
-              {/* CONSERVATION TAB */}
+              {/* ── CONSERVATION TAB ── */}
               {activeTab === 'conservation' && (
                 <div className="space-y-4">
                   {isCoral && (result.species.possible_bleaching_causes ?? []).length > 0 && (
@@ -603,7 +836,7 @@ export default function ResultsPage() {
               )}
             </div>
 
-            {/* RIGHT: CHAT + STATS */}
+            {/* RIGHT PANEL */}
             <div className="fu d4 lg:col-span-3 flex flex-col gap-3">
               {!chatOpen && (
                 <>
@@ -635,11 +868,19 @@ export default function ResultsPage() {
                         { label: 'Match',    value: `${pct.toFixed(1)}%` },
                         { label: 'Source',   value: isImageUpload ? 'Image Upload' : 'Text Search' },
                         { label: 'Health',   value: result.species.health_status || (isCoral ? result.species.coral_health_status : null) || '—' },
+                        { label: 'IUCN',     value: result.species.iucn_status || '—' },
+                        { label: 'Score',    value: result.species.ocean_health_score !== undefined ? `${result.species.ocean_health_score}/100` : '—' },
                       ].map(({ label, value }) => value && (
                         <div key={label} className="flex justify-between items-center">
                           <span className="text-xs" style={{ color: 'rgba(255,255,255,0.22)' }}>{label}</span>
                           <span className="text-xs font-medium capitalize"
-                            style={{ color: label === 'Health' && value !== '—' && value !== 'healthy' ? '#fbbf24' : 'rgba(103,232,249,0.7)' }}>
+                            style={{
+                              color: label === 'Health' && value !== '—' && value !== 'healthy' ? '#fbbf24'
+                                : label === 'IUCN' && value !== '—' && value.includes('Endangered') ? '#f97316'
+                                : label === 'Score' && value !== '—' && parseInt(value) < 40 ? '#f87171'
+                                : label === 'Score' && value !== '—' && parseInt(value) > 60 ? '#4ade80'
+                                : 'rgba(103,232,249,0.7)',
+                            }}>
                             {value}
                           </span>
                         </div>
@@ -664,6 +905,15 @@ export default function ResultsPage() {
                     </div>
                   )}
 
+                  <button onClick={() => router.push('/globe')}
+                    className="w-full py-3 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2"
+                    style={{ fontFamily: "'Orbitron', monospace", fontSize: '11px', letterSpacing: '0.08em', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='rgba(239,68,68,0.15)'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 20px rgba(239,68,68,0.15)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='rgba(239,68,68,0.08)'; (e.currentTarget as HTMLElement).style.boxShadow='none' }}>
+                    <Globe className="w-3.5 h-3.5" />
+                    TRACK THIS SPECIES
+                  </button>
+
                   <div className="rounded-xl px-4 py-3 flex items-center justify-between"
                     style={{ background: 'rgba(255,153,0,0.03)', border: '1px solid rgba(255,153,0,0.1)' }}>
                     <div>
@@ -677,7 +927,6 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* CHAT PANEL */}
           {chatOpen && (
             <div className="fu d3 mb-4">
               <ChatPanel speciesName={result.species.species_name} onClose={() => setChatOpen(false)} />
@@ -686,10 +935,9 @@ export default function ResultsPage() {
 
           <div className="fu d6 text-center pt-5" style={{ borderTop: '1px solid rgba(6,182,212,0.06)' }}>
             <p className="text-xs tracking-widest" style={{ color: 'rgba(6,182,212,0.15)', fontFamily: "'Orbitron',monospace" }}>
-              AQUAAI · MARINE ECOSYSTEM INTELLIGENCE · HACKATHON 2026
+              AQUAAI V2 · MARINE ECOSYSTEM INTELLIGENCE · 2026
             </p>
           </div>
-
         </div>
       </main>
     </>
